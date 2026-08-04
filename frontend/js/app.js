@@ -602,7 +602,7 @@ $('overlay-form').addEventListener('click',function(e){
 });
 
 // Other overlays: click outside to close directly
-['overlay-delete','overlay-cat','overlay-import','overlay-emp','overlay-unsaved','overlay-delete-store','overlay-edit-hist-date','overlay-global-backup','overlay-discount'].forEach(function(id){
+['overlay-delete','overlay-cat','overlay-import','overlay-emp','overlay-unsaved','overlay-delete-store','overlay-discount'].forEach(function(id){
   $(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
 });
 

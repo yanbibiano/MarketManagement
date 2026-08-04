@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>GestãoLoja v9</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f0f0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GestãoLoja">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="lw">
+    <div class="lbrand">
+      <div class="lbrand-icon">🏪</div>
+      <div class="lbrand-name">GestãoLoja</div>
+      <div class="lbrand-sub">Gestão de estoque e vendas</div>
+    </div>
+    <div class="lcard">
+      <div id="lp-stores">
+        <div style="font-size:15px;font-weight:600;margin-bottom:4px">Selecione a loja</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Entre numa loja existente ou crie uma nova</div>
+        <div class="stores-list" id="stores-list"></div>
+        <div class="ldiv">ou</div>
+        <button class="btn-newstore" onclick="showNewStore()">+ Criar nova loja</button>
+        <div class="lerr" id="lerr"></div>
+      </div>
+      <div id="lp-new" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+          <button class="lback" onclick="showLStores()">← Voltar</button>
+          <div style="font-size:15px;font-weight:600">Nova loja</div>
+        </div>
+        <div class="lform">
+          <div class="field"><label>Nome da loja</label><input class="linput" type="text" id="ns-name" placeholder="Ex: Loja Centro" oninput="clearLErr()"></div>
+          <div class="field"><label>Senha</label><input class="linput" type="password" id="ns-pass" placeholder="Mínimo 4 caracteres" oninput="clearLErr()"></div>
+          <div class="field"><label>Confirmar senha</label><input class="linput" type="password" id="ns-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')createStore()" oninput="clearLErr()"></div>
+          <div class="lerr" id="ns-err"></div>
+          <button class="lbtn" onclick="createStore()">Criar loja</button>
+        </div>
+      </div>
+      <div id="lp-login" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+          <button class="lback" onclick="showLStores()">← Voltar</button>
+          <div>
+            <div style="font-size:15px;font-weight:600" id="slp-name">—</div>
+            <div style="font-size:11px;color:var(--text3)">Digite a senha</div>
+          </div>
+        </div>
+        <div class="lform">
+          <div class="field"><label>Senha</label><input class="linput" type="password" id="slp-pass" placeholder="Senha da loja" onkeydown="if(event.key==='Enter')doLogin()" oninput="clearLErr()"></div>
+          <div class="lerr" id="slp-err"></div>
+          <button class="lbtn" onclick="doLogin()">Entrar</button>
+        </div>
+      </div>
+    </div>
+    <div class="lfoot">Dados salvos localmente neste navegador</div>
+  </div>
+</div>
+
+<!-- ══════════════ ROLE SCREEN ══════════════ -->
+<div id="role-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;padding:16px">
+  <div class="lw">
+    <div class="lbrand">
+      <div class="lbrand-icon">🏪</div>
+      <div class="lbrand-name" id="role-store-name">Loja</div>
+      <div class="lbrand-sub">Quem está entrando?</div>
+    </div>
+    <div class="lcard">
+      <div id="rp-choose">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">Selecionar perfil</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Escolha como deseja acessar esta sessão</div>
+        <div class="role-opts">
+          <div class="role-opt" onclick="showRoleLogin('boss')">
+            <div class="role-opt-icon boss">👑</div>
+            <div class="role-opt-info">
+              <div class="role-opt-name">Chefe</div>
+              <div class="role-opt-desc">Acesso total — estoque, preços, relatórios, configurações</div>
+            </div>
+            <span class="role-badge boss">CHEFE</span>
+          </div>
+          <div class="role-opt" onclick="showRoleLogin('emp')" id="role-opt-emp">
+            <div class="role-opt-icon emp">👤</div>
+            <div class="role-opt-info">
+              <div class="role-opt-name">Funcionário</div>
+              <div class="role-opt-desc">Apenas vendas e consulta de estoque</div>
+            </div>
+            <span class="role-badge emp">FUNCIONÁRIO</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;text-align:center">
+          <button class="lback" onclick="goToLogin()">← Trocar de loja</button>
+        </div>
+      </div>
+      <div id="rp-boss" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+          <button class="lback" onclick="showRoleChoose()">← Voltar</button>
+          <div>
+            <div style="font-size:15px;font-weight:600">👑 Entrar como Chefe</div>
+            <div style="font-size:11px;color:var(--text3)">Senha da loja</div>
+          </div>
+        </div>
+        <div class="lform">
+          <div class="field"><label>Senha</label><input class="linput" type="password" id="boss-pass" placeholder="Senha da loja" onkeydown="if(event.key==='Enter')doBossLogin()" oninput="$('boss-err').textContent=''"></div>
+          <div class="lerr" id="boss-err"></div>
+          <button class="lbtn" onclick="doBossLogin()">Entrar como Chefe</button>
+        </div>
+      </div>
+      <div id="rp-emp" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+          <button class="lback" onclick="showRoleChoose()">← Voltar</button>
+          <div>
+            <div style="font-size:15px;font-weight:600">👤 Entrar como Funcionário</div>
+            <div style="font-size:11px;color:var(--text3)">Selecione seu cadastro</div>
+          </div>
+        </div>
+        <div id="emp-list-login" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:200px;overflow-y:auto"></div>
+        <div class="lerr" id="emp-err"></div>
+      </div>
+      <div id="rp-emp-pass" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+          <button class="lback" onclick="showRoleLogin('emp')">← Voltar</button>
+          <div>
+            <div style="font-size:15px;font-weight:600" id="emp-login-name">—</div>
+            <div style="font-size:11px;color:var(--text3)">Digite a senha do funcionário</div>
+          </div>
+        </div>
+        <div class="lform">
+          <div class="field"><label>Senha</label><input class="linput" type="password" id="emp-pass-input" placeholder="Senha do funcionário" onkeydown="if(event.key==='Enter')doEmpLogin()" oninput="$('emp-pass-err').textContent=''"></div>
+          <div class="lerr" id="emp-pass-err"></div>
+          <button class="lbtn" onclick="doEmpLogin()">Entrar</button>
+        </div>
+      </div>
+    </div>
+    <div class="lfoot">Dados salvos localmente neste navegador</div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app-screen">
+  <div class="app">
+    <div class="header">
+      <div class="logo" onclick="goToLogin()">
+        <div class="logo-icon">🏪</div>
+        <div>
+          <div class="logo-text" id="store-name-display">Loja</div>
+          <div class="logo-sub">GESTÃO DE ESTOQUE</div>
+        </div>
+      </div>
+      <div class="hright">
+        <div class="hstat-wrap">
+          <div class="hstat"><div class="hstat-v" id="hstat-produtos">0</div><div class="hstat-l">Produtos</div></div>
+          <div class="hstat"><div class="hstat-v" id="hstat-estoque">0</div><div class="hstat-l">Em estoque</div></div>
+        </div>
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center"><span class="hdot"></span>Salvo</span>
+        <div class="role-indicator boss" id="role-indicator" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Module Nav -->
+    <div class="module-nav">
+      <button class="module-btn active" id="mnav-vendas" onclick="setModule('vendas')">🛒 Vendas</button>
+      <button class="module-btn" id="mnav-estoque" onclick="setModule('estoque')">📦 Estoque</button>
+      <button class="module-btn" id="mnav-admin" onclick="setModule('admin')">⚙️ Administração</button>
+    </div>
+
+    <!-- Subtabs Vendas -->
+    <div class="subtabs" id="subtabs-vendas">
+      <button class="subtab active" onclick="setTab('vendas')" data-tab="vendas">🛒 Nova Venda</button>
+      <button class="subtab" onclick="setTab('historico')" data-tab="historico">📋 Histórico</button>
+    </div>
+
+    <!-- Subtabs Estoque -->
+    <div class="subtabs" id="subtabs-estoque" style="display:none">
+      <button class="subtab active" onclick="setTab('estoque')" data-tab="estoque">📦 Produtos</button>
+      <button class="subtab" onclick="setTab('precos')" data-tab="precos">💰 Preços</button>
+    </div>
+
+    <!-- Subtabs Admin -->
+    <div class="subtabs" id="subtabs-admin" style="display:none">
+      <button class="subtab" onclick="setTab('precificacao')" data-tab="precificacao">🧮 Precificação</button>
+      <button class="subtab" onclick="setTab('relatorio')" data-tab="relatorio">📊 Relatório</button>
+      <button class="subtab" onclick="setTab('importexport')" data-tab="importexport">📂 Planilhas</button>
+      <button class="subtab" onclick="setTab('funcionarios')" data-tab="funcionarios">👥 Funcionários</button>
+      <button class="subtab" onclick="setTab('configuracoes')" data-tab="configuracoes">🔧 Config</button>
+      <button class="subtab" onclick="goToLogin()" data-tab="">↩ Sair</button>
+    </div>
+
+    <!-- ── TAB ESTOQUE ── -->
+    <div id="tab-estoque">
+      <div class="summary">
+        <div class="scard"><div class="scard-label">Em estoque</div><div class="scard-val b" id="sum-total">0</div><div class="scard-sub">unidades</div></div>
+        <div class="scard"><div class="scard-label">Custo total</div><div class="scard-val y" id="sum-custo">R$ 0</div><div class="scard-sub">valor pago</div></div>
+        <div class="scard"><div class="scard-label">Valor de venda</div><div class="scard-val g" id="sum-venda">R$ 0</div><div class="scard-sub">se vender tudo</div></div>
+      </div>
+      <div class="alert-bar" id="low-alert"></div>
+      <div class="filter-row">
+        <input class="search-box" type="text" placeholder="🔍 Nome, código de barras..." oninput="render()" id="search-input">
+      </div>
+      <div class="filter-row" style="margin-bottom:14px">
+        <div class="pill-wrap" id="cat-pills-estoque"></div>
+        <button class="btn-newcat" id="btn-newcat-estoque" onclick="openCatModal()">+ Categorias</button>
+      </div>
+      <div class="actions-row">
+        <span class="result-count" id="result-count"></span>
+        <div style="flex:1"></div>
+        <button class="btn btn-accent btn-sm" id="btn-new-product" onclick="openModal(null)">+ Novo produto</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Produto</th><th>Cód. Barras</th><th>Cat.</th><th>Variações</th>
+            <th>Qtd</th><th>Custo</th><th>Venda</th><th>Margem</th><th></th>
+          </tr></thead>
+          <tbody id="tbody-estoque"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB VENDAS ── -->
+    <div id="tab-vendas" style="display:none">
+      <div style="position:relative;margin-bottom:8px">
+        <input class="search-box" style="width:100%" type="text" id="sale-search"
+          placeholder="🔍 Buscar por nome, categoria ou código de barras..."
+          oninput="searchSale()" autocomplete="off">
+        <div class="search-result-list" id="sale-results"></div>
+      </div>
+      <div class="cart-area" id="cart-area">
+        <div class="cart-empty" id="cart-empty">Nenhum produto adicionado. Use a busca acima.</div>
+        <div id="cart-items"></div>
+        <div class="cart-total" id="cart-total" style="display:none">
+          <div>
+            <div class="cart-total-label">Total da venda</div>
+            <div style="font-size:11px;color:var(--text3)" id="cart-items-count"></div>
+          </div>
+          <div class="cart-total-val" id="cart-total-val">R$ 0,00</div>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:500;margin-bottom:8px">💳 Forma de pagamento</div>
+        <div class="payment-row" id="payment-row">
+          <button class="pay-btn sel" data-pay="Dinheiro" onclick="selectPayment(this)">💵 Dinheiro</button>
+          <button class="pay-btn" data-pay="Cartão de Crédito" onclick="selectPayment(this)">💳 Crédito</button>
+          <button class="pay-btn" data-pay="Cartão de Débito" onclick="selectPayment(this)">💳 Débito</button>
+          <button class="pay-btn" data-pay="Pix" onclick="selectPayment(this)">📲 Pix</button>
+          <button class="pay-btn" data-pay="Fiado" onclick="selectPayment(this)">📝 Fiado</button>
+        </div>
+      </div>
+      <div id="cart-discount-row" style="display:none;align-items:center;justify-content:space-between;background:var(--accent-dim);border:1px solid var(--accent);border-radius:var(--rsm);padding:6px 12px;margin-bottom:8px;font-size:13px">
+        <span style="color:var(--text2)">🏷️ Desconto aplicado</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:'DM Mono',monospace;font-weight:600;color:var(--accent)" id="cart-discount-display"></span>
+          <button onclick="openDiscountModal()" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;text-decoration:underline">editar</button>
+          <button onclick="applyDiscount(0);renderCart()" style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="clearCart()" style="flex:1">🗑 Limpar</button>
+        <button class="btn btn-ghost" onclick="openDiscountModal()" style="flex:1">🏷️ Desconto</button>
+        <button class="btn btn-accent" onclick="finalizeSale()" id="btn-finish-sale" disabled style="flex:2">✓ Finalizar venda</button>
+      </div>
+    </div>
+
+    <!-- ── TAB HISTÓRICO ── -->
+    <div id="tab-historico" style="display:none">
+      <div class="filter-row" style="margin-bottom:8px">
+        <select class="search-box" id="hist-type-filter" onchange="renderHistorico()" style="flex:0;min-width:140px">
+          <option value="">Todos os tipos</option>
+          <option value="sale">Vendas</option>
+          <option value="adjust">Ajustes</option>
+          <option value="remove">Remoções</option>
+        </select>
+        <input class="search-box" type="text" id="hist-search" placeholder="🔍 Buscar produto..." oninput="renderHistorico()">
+        <button class="btn btn-ghost btn-sm" onclick="clearHistory()">🗑 Limpar</button>
+      </div>
+      <!-- Filtro de data -->
+      <div class="filter-row" style="margin-bottom:14px;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text3);white-space:nowrap">📅 De:</span>
+        <input type="date" class="search-box" id="hist-date-from" onchange="renderHistorico()" style="flex:1;min-width:130px;max-width:160px">
+        <span style="font-size:12px;color:var(--text3);white-space:nowrap">Até:</span>
+        <input type="date" class="search-box" id="hist-date-to" onchange="renderHistorico()" style="flex:1;min-width:130px;max-width:160px">
+        <button class="btn btn-ghost btn-sm" onclick="clearHistDateFilter()">✕ Limpar datas</button>
+      </div>
+      <div class="rcard" id="hist-container">
+        <div class="empty">Nenhuma movimentação registrada ainda.</div>
+      </div>
+    </div>
+
+    <!-- ── TAB PREÇOS ── -->
+    <div id="tab-precos" style="display:none">
+      <div class="filter-row">
+        <input class="search-box" type="text" placeholder="🔍 Buscar..." oninput="renderPrecos()" id="search-precos">
+      </div>
+      <div class="filter-row" style="margin-bottom:14px">
+        <div class="pill-wrap" id="cat-pills-precos"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Produto</th><th>Categoria</th><th>Custo</th><th>Venda</th><th>Lucro</th><th>Margem %</th></tr></thead>
+          <tbody id="tbody-precos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB PRECIFICAÇÃO ── -->
+    <div id="tab-precificacao" style="display:none">
+      <div class="prec-hero">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">🧮 Calcular preço de venda por margem de lucro</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="field" style="flex:1;min-width:120px">
+            <label>Margem desejada (%)</label>
+            <input type="number" id="prec-margem" value="30" min="1" max="99" step="1" oninput="onPrecMargemChange()">
+          </div>
+        </div>
+        <div class="prec-presets">
+          <span style="font-size:11px;color:var(--text3)">Atalhos:</span>
+          <button class="prec-preset" data-val="20" onclick="setPreset(20)">20%</button>
+          <button class="prec-preset active" data-val="30" onclick="setPreset(30)">30%</button>
+          <button class="prec-preset" data-val="40" onclick="setPreset(40)">40%</button>
+          <button class="prec-preset" data-val="50" onclick="setPreset(50)">50%</button>
+          <button class="prec-preset" data-val="60" onclick="setPreset(60)">60%</button>
+        </div>
+      </div>
+      <div class="prec-sel-row">
+        <input type="checkbox" class="prec-check" id="prec-check-all" onchange="toggleAllPrec(this.checked)">
+        <label for="prec-check-all" style="cursor:pointer">Selecionar todos</label>
+        <span id="prec-sel-count" style="margin-left:4px">0 selecionados</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearPrecSelection()" style="margin-left:4px">Limpar</button>
+      </div>
+      <div class="prec-summary" id="prec-summary" style="display:none">
+        <div class="prec-s-item"><div class="prec-s-label">Selecionados</div><div class="prec-s-val" id="prec-s-count">0</div></div>
+        <div class="prec-s-item"><div class="prec-s-label">Margem</div><div class="prec-s-val" id="prec-s-margem">0%</div></div>
+        <div class="prec-s-item"><div class="prec-s-label">Receita projetada</div><div class="prec-s-val" id="prec-s-receita">R$ 0</div></div>
+      </div>
+      <div class="actions-row" style="margin-top:14px">
+        <div style="flex:1"></div>
+        <button class="btn btn-accent btn-sm" id="prec-apply-btn" onclick="applyPrecificacao()" disabled>Aplicar selecionados</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:32px"></th>
+            <th>Produto</th><th>Cat.</th><th>Custo</th><th>Venda atual</th>
+            <th>Margem atual</th><th>Novo preço</th><th>Diferença</th>
+          </tr></thead>
+          <tbody id="tbody-precificacao"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB RELATÓRIO ── -->
+    <div id="tab-relatorio" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:500;margin-bottom:10px">📅 Período de vendas</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <button class="prec-preset active" id="period-btn-day"    onclick="setPeriod('day')">Hoje</button>
+          <button class="prec-preset"        id="period-btn-week"   onclick="setPeriod('week')">7 dias</button>
+          <button class="prec-preset"        id="period-btn-month"  onclick="setPeriod('month')">Este mês</button>
+          <button class="prec-preset"        id="period-btn-all"    onclick="setPeriod('all')">Tudo</button>
+          <button class="prec-preset"        id="period-btn-custom" onclick="setPeriod('custom')">📅 Personalizado</button>
+        </div>
+        <div id="period-custom-row" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;padding:10px;background:var(--bg3);border-radius:var(--rsm);border:1px solid var(--border)">
+          <span style="font-size:12px;color:var(--text3);white-space:nowrap">De:</span>
+          <input type="date" id="period-custom-from" class="search-box" style="flex:1;min-width:130px;max-width:160px;font-size:12px">
+          <span style="font-size:12px;color:var(--text3);white-space:nowrap">Até:</span>
+          <input type="date" id="period-custom-to" class="search-box" style="flex:1;min-width:130px;max-width:160px;font-size:12px">
+          <button class="btn btn-accent btn-sm" onclick="applyCustomPeriod()">Aplicar</button>
+        </div>
+        <div class="report-grid">
+          <div class="rcard" style="margin-bottom:0">
+            <div class="rcard-title">Vendas no período</div>
+            <div class="rcard-row"><span>Transações</span><span class="rcard-val" id="p-count">—</span></div>
+            <div class="rcard-row"><span>Itens vendidos</span><span class="rcard-val" id="p-items">—</span></div>
+            <div class="rcard-row" id="p-bruto-row" style="display:none"><span style="color:var(--text3)">Subtotal bruto</span><span class="rcard-val" style="color:var(--text2)" id="p-bruto">—</span></div>
+            <div class="rcard-row" id="p-desconto-row" style="display:none"><span style="color:var(--accent)">🏷️ Descontos</span><span class="rcard-val" style="color:var(--accent)" id="p-desconto">—</span></div>
+            <div class="rcard-row"><span style="font-weight:600">Total líquido</span><span class="rcard-val" style="color:var(--green)" id="p-total">—</span></div>
+          </div>
+          <div class="rcard" style="margin-bottom:0">
+            <div class="rcard-title">Por forma de pagamento</div>
+            <div id="p-pay-breakdown" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico de vendas -->
+      <div class="rcard" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="rcard-title" style="margin-bottom:0">📈 Vendas por dia</div>
+          <select id="chart-period-select" class="search-box" style="flex:0;min-width:120px;font-size:11px;padding:4px 8px" onchange="renderSalesChart()">
+            <option value="7">Últimos 7 dias</option>
+            <option value="14">Últimos 14 dias</option>
+            <option value="30" selected>Últimos 30 dias</option>
+          </select>
+        </div>
+        <div style="position:relative;height:180px">
+          <canvas id="sales-chart"></canvas>
+        </div>
+        <div id="chart-empty" style="display:none;text-align:center;padding:40px;font-size:13px;color:var(--text3)">Nenhuma venda registrada ainda.</div>
+      </div>
+      <div class="report-grid">
+        <div class="rcard">
+          <div class="rcard-title">Estoque · Valores</div>
+          <div class="rcard-row"><span>Custo total</span><span class="rcard-val" id="r-custo">—</span></div>
+          <div class="rcard-row"><span>Valor de venda</span><span class="rcard-val" id="r-venda">—</span></div>
+          <div class="rcard-row"><span>Lucro potencial</span><span class="rcard-val" style="color:var(--green)" id="r-lucro">—</span></div>
+          <div class="rcard-row"><span>Margem média</span><span class="rcard-val" id="r-margem">—</span></div>
+          <div class="rcard-row"><span style="color:var(--text3)">Total bruto vendido</span><span class="rcard-val" style="color:var(--text2)" id="r-bruto">—</span></div>
+          <div class="rcard-row"><span style="color:var(--accent)">🏷️ Total descontos</span><span class="rcard-val" style="color:var(--accent)" id="r-descontos">—</span></div>
+          <div class="rcard-row"><span style="font-weight:600">Total líquido vendido</span><span class="rcard-val" style="color:var(--green)" id="r-vendido">—</span></div>
+        </div>
+        <div class="rcard">
+          <div class="rcard-title">Estoque · Produtos</div>
+          <div class="rcard-row"><span>Total de produtos</span><span class="rcard-val" id="r-prods">—</span></div>
+          <div class="rcard-row"><span>Unidades em estoque</span><span class="rcard-val" id="r-units">—</span></div>
+          <div class="rcard-row"><span style="color:var(--orange)">Estoque baixo</span><span class="rcard-val" style="color:var(--orange)" id="r-low">—</span></div>
+          <div class="rcard-row"><span style="color:var(--red)">Sem estoque</span><span class="rcard-val" style="color:var(--red)" id="r-zero">—</span></div>
+        </div>
+      </div>
+      <div class="rcard">
+        <div class="rcard-title">🏆 Top 5 produtos por margem</div>
+        <div class="top5-wrap">
+          <table>
+            <thead><tr>
+              <th>Produto</th>
+              <th style="text-align:right">Margem</th>
+              <th style="text-align:right">Lucro unit.</th>
+            </tr></thead>
+            <tbody id="r-top"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB IMPORT/EXPORT ── -->
+    <div id="tab-importexport" style="display:none">
+      <div class="rcard" style="margin-bottom:14px">
+        <div class="rcard-title">⬇ Exportar planilha</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px">
+          Baixe todo o estoque e histórico em formato .xlsx compatível com Excel e Google Sheets.
+        </div>
+        <button class="btn btn-green" id="btn-export" onclick="exportExcel()">⬇ Exportar</button>
+      </div>
+      <div class="rcard">
+        <div class="rcard-title">⬆ Importar planilha</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px">
+          Importe produtos de uma planilha .xlsx, .xls ou .csv.
+        </div>
+        <button class="btn btn-blue" onclick="openImportModal()">⬆ Importar</button>
+      </div>
+    </div>
+
+    <!-- ── TAB FUNCIONÁRIOS ── -->
+    <div id="tab-funcionarios" style="display:none">
+      <div class="actions-row" style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600">👥 Funcionários cadastrados</div>
+        <div style="flex:1"></div>
+        <button class="btn btn-accent btn-sm" onclick="openAddEmpModal()">+ Novo funcionário</button>
+      </div>
+      <div class="rcard">
+        <div class="emp-list" id="emp-list-admin">
+          <div class="empty" style="padding:20px;color:var(--text3);font-size:13px">Nenhum funcionário cadastrado.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB CONFIGURAÇÕES ── -->
+    <div id="tab-configuracoes" style="display:none">
+
+      <!-- ── BACKUP ── -->
+      <div class="rcard" style="margin-bottom:14px">
+        <div class="rcard-title">💾 Backup de dados</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Exportar backup completo</div>
+            <div class="setting-sub">Salva todos os produtos, histórico e funcionários em um arquivo .json</div>
+          </div>
+          <div class="setting-ctrl">
+            <button class="btn btn-green btn-sm" onclick="exportBackup()">⬇ Baixar backup</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Restaurar backup</div>
+            <div class="setting-sub">Carrega um arquivo .json exportado anteriormente. Os dados atuais serão substituídos.</div>
+          </div>
+          <div class="setting-ctrl">
+            <button class="btn btn-blue btn-sm" onclick="$('backup-file-input').click()">⬆ Restaurar</button>
+            <input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
+          </div>
+        </div>
+        <div id="backup-status" style="font-size:12px;min-height:16px;margin-top:4px;display:none"></div>
+      </div>
+
+      <!-- ── CONFIGURAÇÕES ── -->
+      <div class="rcard">
+        <div class="rcard-title">⚙️ Configurações da loja</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Tema visual</div>
+            <div class="setting-sub">Alterna entre tema escuro e claro</div>
+          </div>
+          <div class="setting-ctrl">
+            <button class="btn btn-ghost btn-sm" id="btn-theme-toggle" onclick="toggleTheme()">☀️ Tema claro</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Alerta de estoque baixo</div>
+            <div class="setting-sub">Avisa quando um produto tiver igual ou menos que esta quantidade</div>
+          </div>
+          <div class="setting-ctrl">
+            <input type="number" id="cfg-low-stock" value="3" min="1" max="99">
+            <button class="btn btn-accent btn-sm" onclick="saveCfgLowStock()">Salvar</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" style="color:var(--red)">Apagar todos os dados</div>
+            <div class="setting-sub">Remove todos os produtos, histórico e configurações desta loja</div>
+          </div>
+          <div class="setting-ctrl">
+            <button class="btn btn-red btn-sm" onclick="askResetData()">Apagar tudo</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" style="color:var(--red)">Apagar esta loja</div>
+            <div class="setting-sub">Remove a loja permanentemente, incluindo senha e todos os dados. Não pode ser desfeito.</div>
+          </div>
+          <div class="setting-ctrl">
+            <button class="btn btn-red btn-sm" onclick="askDeleteStore()">🗑 Apagar loja</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.app -->
+
+  <!-- Bottom Nav (mobile) -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="bnav-btn active" data-module="vendas" onclick="setModileMobile('vendas')">
+        <span class="ico">🛒</span>Vendas
+      </button>
+      <button class="bnav-btn" data-module="estoque" onclick="setModileMobile('estoque')">
+        <span class="ico">📦</span>Estoque
+      </button>
+      <button class="bnav-btn" data-module="admin" onclick="setModileMobile('admin')">
+        <span class="ico">⚙️</span>Admin
+      </button>
+    </div>
+  </nav>
+</div><!-- /#app-screen -->
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Modal: Produto -->
+<div class="overlay" id="overlay-form">
+  <div class="modal-box wide">
+    <div class="modal-hdr">
+      <span id="modal-title-text">Novo produto</span>
+      <button class="btn-x" onclick="closeModal('overlay-form')">✕</button>
+    </div>
+    <div class="fg fg2">
+      <div class="field" style="grid-column:1/-1">
+        <label>Nome do produto</label>
+        <input type="text" id="f-nome" placeholder="Ex: Camiseta Azul M" maxlength="80">
+      </div>
+      <div class="field"><label>Categoria</label><select id="f-cat"></select></div>
+      <div class="field">
+        <label>Cód. de barras <span class="opt">(opcional)</span></label>
+        <input type="text" id="f-barcode" placeholder="EAN / código" maxlength="30">
+      </div>
+      <div class="field"><label>Quantidade</label><input type="number" id="f-qty" placeholder="0" min="0"></div>
+      <div class="field"><label>Custo (R$)</label><input type="number" id="f-custo" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="field"><label>Preço de venda (R$)</label><input type="number" id="f-venda" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">
+        Variações <span style="font-weight:400;color:var(--text3);font-size:11px">(opcional — ex: tamanhos, cores)</span>
+      </div>
+      <div class="var-list" id="var-list"></div>
+      <div class="var-add-row">
+        <input type="text" id="var-name" placeholder="Nome da variação (ex: P, M, G)" maxlength="30" onkeydown="if(event.key==='Enter')addVariation()">
+        <input type="number" id="var-qty" placeholder="Qtd" min="0" style="max-width:70px">
+        <button class="btn btn-ghost btn-sm" onclick="addVariation()">+ Adicionar</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="tryCloseForm()">Cancelar</button>
+      <button class="btn btn-red" id="btn-delete-prod" style="display:none" onclick="askDeleteFromModal()">Remover</button>
+      <button class="btn btn-accent" onclick="saveProduct()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Categorias -->
+<div class="overlay" id="overlay-cat">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span>Categorias</span>
+      <button class="btn-x" onclick="closeModal('overlay-cat')">✕</button>
+    </div>
+    <div class="cat-list" id="cat-list"></div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="new-cat-input" placeholder="Nova categoria..."
+        style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:8px 12px;color:var(--text);font-size:13px;outline:none"
+        onkeydown="if(event.key==='Enter')addCategory()">
+      <button class="btn btn-accent btn-sm" onclick="addCategory()">+ Adicionar</button>
+    </div>
+    <div style="font-size:12px;color:var(--red);min-height:18px;margin-top:6px" id="cat-err"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-cat')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar remoção -->
+<div class="overlay" id="overlay-delete">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-hdr">
+      <span>Remover produto</span>
+      <button class="btn-x" onclick="closeModal('overlay-delete')">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:4px" id="delete-name-msg"></div>
+    <div style="font-size:12px;color:var(--text3)">Esta ação não pode ser desfeita.</div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-delete')">Cancelar</button>
+      <button class="btn btn-red" onclick="confirmDelete()">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Desconto -->
+<div class="overlay" id="overlay-discount">
+  <div class="modal-box" style="max-width:340px">
+    <div class="modal-hdr">
+      <span>🏷️ Aplicar desconto</span>
+      <button class="btn-x" onclick="closeModal('overlay-discount')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">
+      Subtotal da venda: <strong id="disc-subtotal" style="color:var(--text)"></strong>
+    </div>
+    <div class="field">
+      <label>Desconto em R$</label>
+      <input type="text" id="disc-input" inputmode="decimal" placeholder="Ex: 10,00"
+        onkeydown="if(event.key==='Enter')confirmDiscount()"
+        style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:9px 12px;color:var(--text);font-size:22px;font-family:'DM Mono',monospace;font-weight:600;outline:none;width:100%;text-align:center">
+    </div>
+    <div style="font-size:12px;color:var(--red);min-height:16px;margin-top:4px" id="disc-err"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-discount')">Cancelar</button>
+      <button class="btn btn-accent" onclick="confirmDiscount()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Venda concluída -->
+<div class="overlay" id="overlay-sale-done">
+  <div class="modal-box" style="max-width:360px;text-align:center">
+    <div style="font-size:36px;margin-bottom:10px">✅</div>
+    <div style="font-size:18px;font-weight:600;margin-bottom:4px">Venda finalizada!</div>
+    <div class="sale-done-pay" id="sale-done-pay"></div>
+    <div style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);margin-bottom:8px" id="sale-done-total"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:20px" id="sale-done-items"></div>
+    <button class="btn btn-accent" style="width:100%" onclick="closeSaleDone()">Nova venda</button>
+  </div>
+</div>
+
+<!-- Modal: Importar planilha -->
+<div class="overlay" id="overlay-import">
+  <div class="modal-box wide">
+    <div class="modal-hdr">
+      <span>Importar planilha</span>
+      <button class="btn-x" onclick="closeModal('overlay-import')">✕</button>
+    </div>
+    <div class="drop-zone" id="import-drop" onclick="$('import-file').click()">
+      <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this.files[0])">
+      <div class="drop-icon">📂</div>
+      <div class="drop-title">Arraste ou clique para selecionar</div>
+      <div class="drop-sub">.xlsx · .xls · .csv</div>
+    </div>
+    <div class="import-err" id="import-err"></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px">
+      A planilha deve ter uma coluna <strong>Produto</strong> (ou Nome/Name).
+      Código de barras também é reconhecido. Aba "Estoque" é usada se existir.
+    </div>
+    <div class="import-preview" id="import-preview">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:500" id="import-preview-label">Pré-visualização</div>
+      <div style="overflow:auto;max-height:160px;border-radius:var(--rsm);border:1px solid var(--border)">
+        <table class="imp-tbl" id="import-preview-table"></table>
+      </div>
+      <div class="import-mode-row">
+        <button class="imode-btn sel" id="imode-add" onclick="setIMode('add')">➕ Adicionar</button>
+        <button class="imode-btn" id="imode-replace" onclick="setIMode('replace')">🔄 Substituir tudo</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-import')">Cancelar</button>
+      <button class="btn btn-accent" id="btn-confirm-import" style="display:none" onclick="confirmImport()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Funcionário -->
+<div class="overlay" id="overlay-emp">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-hdr">
+      <span id="emp-modal-title">Cadastrar funcionário</span>
+      <button class="btn-x" onclick="closeModal('overlay-emp')">✕</button>
+    </div>
+    <div class="fg" style="gap:12px">
+      <div class="field"><label>Nome</label><input type="text" id="emp-f-name" placeholder="Ex: João Silva" maxlength="40"></div>
+      <div class="field"><label>Senha</label><input type="password" id="emp-f-pass" placeholder="Mínimo 4 caracteres"></div>
+      <div class="field">
+        <label>Confirmar senha</label>
+        <input type="password" id="emp-f-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')saveEmployee()">
+      </div>
+    </div>
+    <div class="lerr" id="emp-f-err" style="margin-top:8px"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-emp')">Cancelar</button>
+      <button class="btn btn-accent" onclick="saveEmployee()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Apagar loja -->
+<div class="overlay" id="overlay-delete-store">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-hdr">
+      <span>⚠️ Apagar loja</span>
+      <button class="btn-x" onclick="closeModal('overlay-delete-store')">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px">
+      Você está prestes a apagar permanentemente a loja <strong id="delete-store-name-label">—</strong>.
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:6px">
+      Para confirmar, digite o nome da loja abaixo:
+    </div>
+    <input type="text" id="delete-store-confirm-input"
+      class="linput" placeholder="Nome da loja"
+      oninput="checkDeleteStoreInput()"
+      style="margin-bottom:6px">
+    <div style="font-size:12px;color:var(--red);min-height:16px" id="delete-store-err"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-delete-store')">Cancelar</button>
+      <button class="btn btn-red" id="btn-confirm-delete-store" onclick="confirmDeleteStore()" disabled>Apagar loja</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Descartar alterações -->
+<div class="overlay" id="overlay-unsaved">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-hdr">
+      <span>Descartar alterações?</span>
+      <button class="btn-x" onclick="closeModal('overlay-unsaved')">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:4px">Você tem alterações não salvas.</div>
+    <div style="font-size:12px;color:var(--text3)">Se fechar agora, as alterações serão perdidas.</div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-unsaved')">Continuar editando</button>
+      <button class="btn btn-red" onclick="forceCloseForm()">Descartar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Biblioteca XLSX (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Cliente da API (backend) -->
+<script src="js/api.js"></script>
+<!-- Lógica da aplicação -->
+<script src="js/app.js"></script>
+<!-- Registro do Service Worker (PWA) -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').catch(function(err) {
+        console.warn('Service Worker não registrado:', err);
+      });
+    });
+  }
+</script>
+
+</body>
+</html>

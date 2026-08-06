@@ -236,11 +236,14 @@
 
     <!-- ── TAB VENDAS ── -->
     <div id="tab-vendas" style="display:none">
-      <div style="position:relative;margin-bottom:8px">
-        <input class="search-box" style="width:100%" type="text" id="sale-search"
-          placeholder="🔍 Buscar por nome, categoria ou código de barras..."
-          oninput="searchSale()" autocomplete="off">
-        <div class="search-result-list" id="sale-results"></div>
+      <div style="position:relative;margin-bottom:8px;display:flex;gap:8px">
+        <div style="position:relative;flex:1;min-width:0">
+          <input class="search-box" style="width:100%" type="text" id="sale-search"
+            placeholder="🔍 Buscar por nome, categoria ou código de barras..."
+            oninput="searchSale()" autocomplete="off">
+          <div class="search-result-list" id="sale-results"></div>
+        </div>
+        <button class="btn-x" style="width:42px;height:42px;font-size:19px" title="Escanear código de barras" onclick="openScanner('sale-search')">📷</button>
       </div>
       <div class="cart-area" id="cart-area">
         <div class="cart-empty" id="cart-empty">Nenhum produto adicionado. Use a busca acima.</div>
@@ -586,7 +589,10 @@
       <div class="field"><label>Categoria</label><select id="f-cat"></select></div>
       <div class="field">
         <label>Cód. de barras <span class="opt">(opcional)</span></label>
-        <input type="text" id="f-barcode" placeholder="EAN / código" maxlength="30">
+        <div style="display:flex;gap:8px">
+          <input type="text" id="f-barcode" placeholder="EAN / código" maxlength="30" style="flex:1;min-width:0">
+          <button type="button" class="btn-x" style="width:40px;height:40px;font-size:18px;flex-shrink:0" title="Escanear código de barras" onclick="openScanner('f-barcode')">📷</button>
+        </div>
       </div>
       <div class="field"><label>Quantidade</label><input type="number" id="f-qty" placeholder="0" min="0"></div>
       <div class="field"><label>Custo (R$)</label><input type="number" id="f-custo" placeholder="0.00" min="0" step="0.01"></div>
@@ -645,6 +651,19 @@
       <button class="btn btn-ghost" onclick="closeModal('overlay-delete')">Cancelar</button>
       <button class="btn btn-red" onclick="confirmDelete()">Remover</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: Escanear código de barras -->
+<div class="overlay" id="overlay-scanner">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-hdr">
+      <span>📷 Escanear código de barras</span>
+      <button class="btn-x" onclick="closeScanner()">✕</button>
+    </div>
+    <div id="scanner-view" style="width:100%;border-radius:var(--rsm);overflow:hidden;background:#000;min-height:220px"></div>
+    <div style="font-size:12px;color:var(--red);min-height:16px;margin-top:8px" id="scanner-err"></div>
+    <p style="font-size:12px;color:var(--text3);margin-top:6px">Aponte a câmera para o código de barras do produto.</p>
   </div>
 </div>
 
@@ -788,10 +807,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Biblioteca XLSX (CDN) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Leitor de código de barras via câmera (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <!-- Cliente da API (backend) -->
 <script src="js/api.js"></script>
 <!-- Lógica da aplicação -->
 <script src="js/app.js"></script>
+<!-- Vendas: carrinho e checkout -->
+<script src="js/vendas.js"></script>
+<!-- Leitor de código de barras -->
+<script src="js/scanner.js"></script>
 <!-- Registro do Service Worker (PWA) -->
 <script>
   if ('serviceWorker' in navigator) {

@@ -14,6 +14,8 @@ const ASSETS = [
   './css/styles.css',
   './js/app.js',
   './js/api.js',
+  './js/vendas.js',
+  './js/scanner.js',
   './manifest.json'
 ];
 

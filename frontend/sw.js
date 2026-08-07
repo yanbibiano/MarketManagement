@@ -4,7 +4,7 @@
    Os dados ficam no localStorage (não no cache).
 ═══════════════════════════════════════════ */
 
-const CACHE_NAME = 'gestao-loja-v4';
+const CACHE_NAME = 'gestao-loja-v7';
 
 // Arquivos que serão cacheados para uso offline
 // (Os dados em si vêm da API/backend, não são cacheados aqui.)

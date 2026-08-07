@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS stores (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,
   pass_hash   TEXT NOT NULL,
+  boss_pass_hash TEXT, -- senha do Chefe, separada da senha de entrada da loja (NULL = loja antiga, ainda não migrada)
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
 
   -- Guarda produtos, categorias, histórico, config e funcionários
@@ -21,6 +22,14 @@ CREATE TABLE IF NOT EXISTS stores (
                  "employees": []
                }'::jsonb
 );
+
+-- ═══════════════════════════════════════════════════════
+--  MIGRAÇÃO — rode isto se sua tabela `stores` já existe
+--  (ex: você já tem lojas cadastradas em produção).
+--  Se a tabela ainda não existe, o CREATE TABLE acima já
+--  cria a coluna certa e este bloco não faz nada (idempotente).
+-- ═══════════════════════════════════════════════════════
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS boss_pass_hash TEXT;
 
 -- Garante que não existam duas lojas com o mesmo nome (case-insensitive)
 CREATE UNIQUE INDEX IF NOT EXISTS stores_name_lower_idx ON stores (lower(name));

@@ -8,8 +8,14 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-function signStoreToken(storeId) {
-  return jwt.sign({ storeId }, JWT_SECRET, { expiresIn: TOKEN_TTL });
+/**
+ * @param {string} storeId
+ * @param {string} [role] - 'boss' quando a senha de Chefe já foi confirmada.
+ *   Sessões sem esse papel (recém-logadas na loja, ou de funcionário)
+ *   não conseguem passar pelo requireBoss.
+ */
+function signStoreToken(storeId, role) {
+  return jwt.sign({ storeId: storeId, role: role || null }, JWT_SECRET, { expiresIn: TOKEN_TTL });
 }
 
 /**
@@ -31,10 +37,22 @@ function requireStoreAuth(req, res, next) {
       return res.status(403).json({ error: 'Token não corresponde a esta loja.' });
     }
     req.storeId = payload.storeId;
+    req.role = payload.role || null;
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Token inválido ou expirado. Faça login novamente.' });
   }
 }
 
-module.exports = { signStoreToken, requireStoreAuth };
+/**
+ * Middleware adicional (usar DEPOIS de requireStoreAuth): só deixa passar
+ * se o token foi emitido após confirmar a senha de Chefe.
+ */
+function requireBoss(req, res, next) {
+  if (req.role !== 'boss') {
+    return res.status(403).json({ error: 'Essa ação é restrita ao Chefe da loja.' });
+  }
+  next();
+}
+
+module.exports = { signStoreToken, requireStoreAuth, requireBoss };

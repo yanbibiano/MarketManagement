@@ -8,7 +8,7 @@ var API_BASE_URL = (function () {
   // Em produção, troque a linha abaixo pela URL pública do seu backend
   // (ex: 'https://gestaoloja-api.onrender.com/api').
   var isLocal = ['localhost', '127.0.0.1', ''].indexOf(location.hostname) !== -1;
-  return isLocal ? 'http://localhost:3000/api' : 'https://marketmanagement-api.onrender.com/api';
+  return isLocal ? 'http://localhost:3000/api' : 'https://SUBSTITUA-PELA-URL-DO-SEU-BACKEND/api';
 })();
 
 var sessionToken = sessionStorage.getItem('gloja_token') || null;
@@ -52,14 +52,20 @@ var Api = {
   listStores: function () {
     return apiFetch('/stores', { method: 'GET' });
   },
-  createStore: function (name, password) {
-    return apiFetch('/stores', { method: 'POST', body: { name: name, password: password } });
+  createStore: function (name, password, bossPassword) {
+    return apiFetch('/stores', { method: 'POST', body: { name: name, password: password, bossPassword: bossPassword } });
   },
   loginStore: function (id, password) {
     return apiFetch('/stores/' + id + '/login', { method: 'POST', body: { password: password } });
   },
-  verifyStorePassword: function (id, password) {
-    return apiFetch('/stores/' + id + '/verify', { method: 'POST', body: { password: password } });
+  verifyBoss: function (id, password) {
+    return apiFetch('/stores/' + id + '/verify-boss', { method: 'POST', body: { password: password } });
+  },
+  setBossPassword: function (id, newPassword) {
+    return apiFetch('/stores/' + id + '/boss-password', { method: 'PUT', body: { newPassword: newPassword } });
+  },
+  cancelSale: function (storeId, saleId) {
+    return apiFetch('/stores/' + storeId + '/sales/' + saleId + '/cancel', { method: 'POST' });
   },
   getStoreData: function (id) {
     return apiFetch('/stores/' + id + '/data', { method: 'GET' });

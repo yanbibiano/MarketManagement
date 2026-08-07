@@ -50,8 +50,10 @@
         </div>
         <div class="lform">
           <div class="field"><label>Nome da loja</label><input class="linput" type="text" id="ns-name" placeholder="Ex: Loja Centro" oninput="clearLErr()"></div>
-          <div class="field"><label>Senha</label><input class="linput" type="password" id="ns-pass" placeholder="Mínimo 4 caracteres" oninput="clearLErr()"></div>
-          <div class="field"><label>Confirmar senha</label><input class="linput" type="password" id="ns-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')createStore()" oninput="clearLErr()"></div>
+          <div class="field"><label>Senha da loja <span class="opt">(entrada geral)</span></label><input class="linput" type="password" id="ns-pass" placeholder="Mínimo 4 caracteres" oninput="clearLErr()"></div>
+          <div class="field"><label>Confirmar senha da loja</label><input class="linput" type="password" id="ns-pass2" placeholder="Repita a senha" oninput="clearLErr()"></div>
+          <div class="field"><label>Senha do Chefe <span class="opt">(diferente da senha da loja)</span></label><input class="linput" type="password" id="ns-boss-pass" placeholder="Mínimo 4 caracteres" oninput="clearLErr()"></div>
+          <div class="field"><label>Confirmar senha do Chefe</label><input class="linput" type="password" id="ns-boss-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')createStore()" oninput="clearLErr()"></div>
           <div class="lerr" id="ns-err"></div>
           <button class="lbtn" onclick="createStore()">Criar loja</button>
         </div>
@@ -157,7 +159,7 @@
 <div id="app-screen">
   <div class="app">
     <div class="header">
-      <div class="logo" onclick="goToLogin()">
+      <div class="logo" onclick="logoutToRoleScreen()">
         <div class="logo-icon">🏪</div>
         <div>
           <div class="logo-text" id="store-name-display">Loja</div>
@@ -171,6 +173,7 @@
         </div>
         <span style="font-size:11px;color:var(--text3);display:flex;align-items:center"><span class="hdot"></span>Salvo</span>
         <div class="role-indicator boss" id="role-indicator" style="display:none"></div>
+        <button class="btn btn-ghost btn-sm" onclick="logoutToRoleScreen()" title="Sair" style="display:flex;align-items:center;gap:4px">↩ Sair</button>
       </div>
     </div>
 
@@ -200,7 +203,7 @@
       <button class="subtab" onclick="setTab('importexport')" data-tab="importexport">📂 Planilhas</button>
       <button class="subtab" onclick="setTab('funcionarios')" data-tab="funcionarios">👥 Funcionários</button>
       <button class="subtab" onclick="setTab('configuracoes')" data-tab="configuracoes">🔧 Config</button>
-      <button class="subtab" onclick="goToLogin()" data-tab="">↩ Sair</button>
+      <button class="subtab" onclick="logoutToRoleScreen()" data-tab="">↩ Sair</button>
     </div>
 
     <!-- ── TAB ESTOQUE ── -->
@@ -521,6 +524,17 @@
           </div>
           <div class="setting-ctrl">
             <button class="btn btn-ghost btn-sm" id="btn-theme-toggle" onclick="toggleTheme()">☀️ Tema claro</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Trocar senha do Chefe</div>
+            <div class="setting-sub">Precisa ser diferente da senha de entrada da loja <span id="boss-pass-warn" style="display:none;color:var(--accent)">— defina uma agora, sua loja ainda está usando a senha antiga</span></div>
+          </div>
+          <div class="setting-ctrl" style="flex-direction:column;align-items:stretch;gap:6px">
+            <input type="password" id="cfg-boss-pass" placeholder="Nova senha (mín. 4 caracteres)">
+            <button class="btn btn-accent btn-sm" onclick="saveBossPassword()">Salvar nova senha</button>
+            <div class="lerr" id="cfg-boss-pass-err"></div>
           </div>
         </div>
         <div class="setting-row">

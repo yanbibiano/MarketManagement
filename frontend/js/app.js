@@ -107,17 +107,21 @@ async function renderStoresList(){
 }
 async function createStore(){
   var name=$('ns-name').value.trim(), pass=$('ns-pass').value, pass2=$('ns-pass2').value;
+  var bossPass=$('ns-boss-pass').value, bossPass2=$('ns-boss-pass2').value;
   var err=$('ns-err');
   if(!name){err.textContent='Digite o nome.';return;}
-  if(pass.length<4){err.textContent='Senha mínimo 4 caracteres.';return;}
-  if(pass!==pass2){err.textContent='Senhas não coincidem.';return;}
+  if(pass.length<4){err.textContent='Senha da loja mínimo 4 caracteres.';return;}
+  if(pass!==pass2){err.textContent='Senhas da loja não coincidem.';return;}
+  if(bossPass.length<4){err.textContent='Senha do Chefe mínimo 4 caracteres.';return;}
+  if(bossPass!==bossPass2){err.textContent='Senhas do Chefe não coincidem.';return;}
+  if(bossPass===pass){err.textContent='A senha do Chefe precisa ser diferente da senha da loja.';return;}
   var store;
   try{
-    store = await Api.createStore(name, pass);
+    store = await Api.createStore(name, pass, bossPass);
   }catch(e){ err.textContent=e.message; return; }
   setSessionToken(store.token);
   cachedStores.push({id:store.id,name:store.name,created:store.created,productCount:0});
-  $('ns-name').value='';$('ns-pass').value='';$('ns-pass2').value='';
+  $('ns-name').value='';$('ns-pass').value='';$('ns-pass2').value='';$('ns-boss-pass').value='';$('ns-boss-pass2').value='';
   showToast('✅ Loja "'+name+'" criada!');
   showStoreLogin(store.id);
 }
@@ -185,13 +189,30 @@ function selectEmpLogin(empId){
   $('emp-pass-input').value=''; $('emp-pass-err').textContent='';
   setTimeout(function(){$('emp-pass-input').focus();},100);
 }
+var needsBossPasswordSetup = false; // true quando a loja ainda usa a senha antiga como senha de Chefe
+
 async function doBossLogin(){
   var pass=$('boss-pass').value;
   if(!currentStoreId){$('boss-err').textContent='Erro interno.';return;}
+  var result;
   try{
-    await Api.verifyStorePassword(currentStoreId, pass);
+    result = await Api.verifyBoss(currentStoreId, pass);
   }catch(e){ $('boss-err').textContent=e.message; $('boss-pass').value=''; $('boss-pass').focus(); return; }
+  setSessionToken(result.token); // token agora carrega role:'boss', necessário pra ações restritas (ex: cancelar venda)
+  needsBossPasswordSetup = !!result.needsBossPasswordSetup;
   enterApp('boss', null, currentStoreName||'Loja');
+}
+function saveBossPassword(){
+  var pass=$('cfg-boss-pass').value;
+  var err=$('cfg-boss-pass-err');
+  err.textContent='';
+  if(pass.length<4){ err.textContent='Mínimo 4 caracteres.'; return; }
+  Api.setBossPassword(currentStoreId, pass).then(function(){
+    $('cfg-boss-pass').value='';
+    needsBossPasswordSetup=false;
+    $('boss-pass-warn').style.display='none';
+    showToast('✅ Senha do Chefe atualizada.');
+  }).catch(function(e){ err.textContent=e.message; });
 }
 async function doEmpLogin(){
   var pass=$('emp-pass-input').value;
@@ -216,6 +237,10 @@ function enterApp(role, empId, storeName){
   }
   ind.style.display='flex';
   applyRoleRestrictions();
+  if(role==='boss'){
+    var warn=$('boss-pass-warn');
+    if(warn) warn.style.display = needsBossPasswordSetup ? 'inline' : 'none';
+  }
   setModule('vendas');
   render(); updateHeaderStats();
 }
@@ -236,6 +261,16 @@ function goToLogin(){
   $('role-screen').style.display='none';
   $('login-screen').style.display='flex';
   showLStores();
+}
+/**
+ * "Sair" a partir do app: volta pra tela de escolha Chefe/Funcionário,
+ * sem sair da loja (mantém a sessão da loja ativa). Se a pessoa quiser
+ * trocar de loja de verdade, o botão "← Trocar de loja" na tela de
+ * escolha chama goToLogin() e aí sim volta pra lista de lojas.
+ */
+function logoutToRoleScreen(){
+  currentRole=null; currentEmpId=null;
+  showRoleScreen(currentStoreName||'Loja');
 }
 
 /* ═══════════════════════════════════════════
@@ -765,7 +800,7 @@ function applyCustomPeriod(){
 }
 function renderPeriodSales(){
   var now=new Date();
-  var sales=saleHistory.filter(function(h){ return h.type==='sale'; });
+  var sales=saleHistory.filter(function(h){ return h.type==='sale'&&!h.canceled; });
 
   // Parse dd/mm/yyyy hh:mm from dateStr
   function parseDate(ds){
@@ -849,9 +884,9 @@ function renderRelatorio(){
   var margens=products.filter(function(p){return p.venda>0;}).map(function(p){return(p.venda-p.custo)/p.venda*100;});
   var avg=margens.length?margens.reduce(function(a,b){return a+b;},0)/margens.length:0;
   var low=config.lowStock||3;
-  var totalVendido=saleHistory.filter(function(h){return h.type==='sale';}).reduce(function(a,h){return a+(h.total||0);},0);
-  var totalDescontos=saleHistory.filter(function(h){return h.type==='sale'&&h.discount;}).reduce(function(a,h){return a+(h.discount||0);},0);
-  var totalBrutoGeral=saleHistory.filter(function(h){return h.type==='sale';}).reduce(function(a,h){return a+(h.subtotal||h.total||0);},0);
+  var totalVendido=saleHistory.filter(function(h){return h.type==='sale'&&!h.canceled;}).reduce(function(a,h){return a+(h.total||0);},0);
+  var totalDescontos=saleHistory.filter(function(h){return h.type==='sale'&&!h.canceled&&h.discount;}).reduce(function(a,h){return a+(h.discount||0);},0);
+  var totalBrutoGeral=saleHistory.filter(function(h){return h.type==='sale'&&!h.canceled;}).reduce(function(a,h){return a+(h.subtotal||h.total||0);},0);
   $('r-custo').textContent=fmt(custo); $('r-venda').textContent=fmt(venda);
   $('r-lucro').textContent=fmt(venda-custo); $('r-margem').textContent=pct(avg);
   $('r-prods').textContent=products.length;
@@ -882,6 +917,7 @@ function refreshAll(){
   renderCatPills('cat-pills-precos','precos');
   render(); updateHeaderStats();
 }
+
 
 /* ═══════════════════════════════════════════
    HISTORY
@@ -957,16 +993,36 @@ function renderHistorico(){
     if(h.total&&h.discount&&h.discount>0){
       valHtml='<div style="text-align:right"><div style="font-size:10px;color:var(--text3);text-decoration:line-through">'+fmt(h.subtotal||h.total+h.discount)+'</div><div class="hist-val pos">'+fmt(h.total)+'</div></div>';
     }
-    return '<div class="hist-item">'+
+
+    var canceledTag='', cancelBtn='', itemStyle='';
+    if(h.type==='sale'&&h.canceled){
+      canceledTag='<span style="font-size:10px;background:var(--red-dim);border:1px solid var(--red);color:var(--red);padding:1px 8px;border-radius:10px;margin-left:4px;font-weight:600">✕ Cancelada</span>';
+      itemStyle='opacity:.55';
+    } else if(h.type==='sale'&&currentRole==='boss'){
+      cancelBtn='<button class="btn btn-ghost btn-sm" style="color:var(--red);margin-top:6px" onclick="askCancelSale(\''+h.id+'\')">Cancelar venda</button>';
+    }
+
+    return '<div class="hist-item" style="'+itemStyle+'">'+
       '<div class="hist-dot '+dotClass+'"></div>'+
       '<div class="hist-body" style="flex:1;min-width:0">'+
-        '<div class="hist-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">'+escH(h.label)+payTag+operatorTag+discountTag+'</div>'+
-        '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+escH(h.date)+'</div>'+
-        itemsHtml+
+        '<div class="hist-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">'+escH(h.label)+payTag+operatorTag+discountTag+canceledTag+'</div>'+
+        '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+escH(h.date)+(h.canceledAt?' · cancelada em '+escH(h.canceledAt):'')+'</div>'+
+        itemsHtml+cancelBtn+
       '</div>'+
       '<div style="padding-left:8px">'+valHtml+'</div>'+
     '</div>';
   }).join('');
+}
+function askCancelSale(saleId){
+  if(!confirm('Cancelar esta venda? O estoque dos produtos será devolvido automaticamente.')) return;
+  Api.cancelSale(currentStoreId, saleId).then(function(data){
+    products = data.products || [];
+    saleHistory = data.saleHistory || [];
+    renderHistorico(); render(); updateHeaderStats();
+    showToast('✅ Venda cancelada — estoque devolvido.');
+  }).catch(function(e){
+    showToast('⚠️ '+e.message, true);
+  });
 }
 function clearHistory(){
   if(!saleHistory.length) return;
@@ -1405,7 +1461,7 @@ function renderSalesChart(){
 
   // Soma vendas por dia
   saleHistory.forEach(function(h){
-    if(h.type !== 'sale' || !h.date || !h.total) return;
+    if(h.type !== 'sale' || h.canceled || !h.date || !h.total) return;
     var m = h.date.match(/(\d{2})\/(\d{2})\/(\d{4})/);
     if(!m) return;
     var key = m[3]+'-'+m[2]+'-'+m[1];

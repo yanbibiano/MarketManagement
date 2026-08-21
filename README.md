@@ -1,13 +1,18 @@
-# GestãoLoja
+GestãoLoja
 
-Sistema de gestão de estoque e vendas para pequenas lojas.
+Sistema full-stack de gestão de estoque e vendas para pequenas lojas — multi-loja, com controle de acesso por papel, leitura de código de barras e relatórios em tempo real.
 
-Agora com **backend próprio (Node.js + Express) e banco de dados
-PostgreSQL** — os dados deixaram de ficar presos ao `localStorage` do
-navegador e passam a viver num banco de verdade, acessível de qualquer
-dispositivo, com autenticação por senha (hash bcrypt) + sessão JWT.
+Migrado de uma versão 100% localStorage para uma arquitetura cliente-servidor real: Node.js + Express + PostgreSQL, com autenticação via JWT e senhas protegidas por bcrypt.
 
-## Estrutura do projeto
+Demo: [link do Vercel aqui] · API: [link do Render aqui]
+
+<!-- Adicione aqui 2-3 screenshots ou um GIF do sistema em uso. Exemplo: ![Tela de vendas](./docs/screenshot-vendas.png) -->
+Stack
+Camada	Tecnologias
+Backend	Node.js, Express, PostgreSQL, JWT, bcrypt
+Frontend	HTML, CSS, JavaScript puro, PWA (Service Worker)
+Infra	Render (API) + Supabase (banco) + Vercel (frontend)
+Extras	html5-qrcode (scanner de código de barras), Chart.js (relatórios)
 
 ```
 GestaoLoja/
@@ -21,45 +26,25 @@ GestaoLoja/
     └── README.md   ← como rodar e fazer deploy grátis
 ```
 
-## Como colocar no ar (grátis)
+Funcionalidades
+Multi-lojas com senha individual por loja
+Perfis de acesso: Chefe (acesso total) e Funcionário (só vendas)
+Estoque com variações, código de barras e categorias
+Vendas com carrinho, formas de pagamento e baixa automática de estoque
+Cancelamento de venda com restauração automática de estoque
+Histórico de vendas e movimentações com filtros
+Precificação em lote por margem de lucro
+Relatórios com gráfico de vendas (Chart.js)
+Import/export de planilhas .xlsx / .xls / .csv
+Backup/restauração manual em .json
+PWA — instalável, com ícone e tema próprio
+Como colocar no ar (grátis)
 
 Siga nesta ordem — cada passo depende do anterior:
 
-1. **Banco de dados** — crie um projeto Postgres grátis no
-   [Supabase](https://supabase.com) ou [Neon](https://neon.tech) e rode
-   `backend/schema.sql` nele.
-2. **Backend** — suba `backend/` no [Render](https://render.com) (free
-   tier), configurando as variáveis de ambiente (`DATABASE_URL`,
-   `JWT_SECRET`, `CORS_ORIGIN`). Detalhes em `backend/README.md`.
-3. **Frontend** — suba `frontend/` no [Vercel](https://vercel.com) ou
-   [Netlify](https://netlify.com) (site estático, sem build). Antes,
-   aponte `frontend/js/api.js` para a URL do backend. Detalhes em
-   `frontend/README.md`.
-4. Volte no Render e atualize `CORS_ORIGIN` com a URL final do frontend.
+Banco de dados — crie um projeto Postgres grátis no Supabase ou Neon e rode backend/schema.sql nele.
+Backend — suba backend/ no Render (free tier), configurando as variáveis de ambiente (DATABASE_URL, JWT_SECRET, CORS_ORIGIN). Detalhes em backend/README.md.
+Frontend — suba frontend/ no Vercel ou Netlify (site estático, sem build). Antes, aponte frontend/js/api.js para a URL do backend. Detalhes em frontend/README.md.
+Volte no Render e atualize CORS_ORIGIN com a URL final do frontend.
 
-Todos os serviços acima têm camada gratuita permanente — sem cartão de
-crédito. A única limitação prática é que o backend no Render "dorme"
-depois de ficar um tempo sem uso e leva alguns segundos para acordar na
-próxima requisição.
-
-## O que mudou em relação à versão anterior (100% localStorage)
-
--  Dados salvos em PostgreSQL, acessíveis de qualquer navegador/dispositivo — não dependem mais de um único computador/navegador.
--  Senhas de loja e de funcionário protegidas com **bcrypt** no servidor (antes eram um hash fraco calculado e comparado no navegador).
--  Sessão via **JWT** (token expira em 12h) em vez de ficar tudo aberto no `localStorage`.
--  Estrutura de pastas separando claramente `backend/` (API) de `frontend/` (interface).
--  Exige internet: sem conexão com o backend, o app não carrega dados (diferente da versão anterior, que era 100% offline).
--  Restaurar um backup antigo (`.json` exportado antes) não traz de volta as senhas de funcionários — é preciso recadastrar as senhas depois de importar.
-
-## Funcionalidades
-
-- Multi-lojas com senha individual por loja
-- Perfis de acesso: Chefe (acesso total) e Funcionário (só vendas)
-- Estoque com variações, código de barras, categorias
-- Vendas com carrinho, formas de pagamento, baixa automática de estoque
-- Histórico de vendas e movimentações com filtros
-- Precificação em lote por margem de lucro
-- Relatórios com gráfico de vendas (Chart.js)
-- Import/export de planilhas `.xlsx`/`.xls`/`.csv`
-- Backup/restauração manual em `.json`
-- PWA — instalável, com ícone e tema
+Todos os serviços acima têm camada gratuita permanente — sem cartão de crédito. A única limitação prática é que o backend no Render "dorme" depois de ficar um tempo sem uso e leva alguns segundos para acordar na próxima requisição.

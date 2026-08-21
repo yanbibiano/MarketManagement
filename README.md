@@ -44,12 +44,12 @@ próxima requisição.
 
 ## O que mudou em relação à versão anterior (100% localStorage)
 
-- ✅ Dados salvos em PostgreSQL, acessíveis de qualquer navegador/dispositivo — não dependem mais de um único computador/navegador.
-- ✅ Senhas de loja e de funcionário protegidas com **bcrypt** no servidor (antes eram um hash fraco calculado e comparado no navegador).
-- ✅ Sessão via **JWT** (token expira em 12h) em vez de ficar tudo aberto no `localStorage`.
-- ✅ Estrutura de pastas separando claramente `backend/` (API) de `frontend/` (interface).
-- ⚠️ Exige internet: sem conexão com o backend, o app não carrega dados (diferente da versão anterior, que era 100% offline).
-- ⚠️ Restaurar um backup antigo (`.json` exportado antes) não traz de volta as senhas de funcionários — é preciso recadastrar as senhas depois de importar.
+-  Dados salvos em PostgreSQL, acessíveis de qualquer navegador/dispositivo — não dependem mais de um único computador/navegador.
+-  Senhas de loja e de funcionário protegidas com **bcrypt** no servidor (antes eram um hash fraco calculado e comparado no navegador).
+-  Sessão via **JWT** (token expira em 12h) em vez de ficar tudo aberto no `localStorage`.
+-  Estrutura de pastas separando claramente `backend/` (API) de `frontend/` (interface).
+-  Exige internet: sem conexão com o backend, o app não carrega dados (diferente da versão anterior, que era 100% offline).
+-  Restaurar um backup antigo (`.json` exportado antes) não traz de volta as senhas de funcionários — é preciso recadastrar as senhas depois de importar.
 
 ## Funcionalidades
 

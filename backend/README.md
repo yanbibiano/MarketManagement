@@ -75,5 +75,29 @@ frontend (ex: `https://gestaoloja.vercel.app`).
 | PUT    | `/api/stores/:id/data`                      | sim  | Salva o conjunto de dados da loja |
 | POST   | `/api/stores/:id/employees/:empId/login`    | sim  | Valida a senha de um funcionário |
 | DELETE | `/api/stores/:id`                           | sim  | Apaga a loja e todos os dados |
+| GET    | `/api/stores/:id/backups`                   | sim (Chefe) | Lista os backups automáticos dessa loja |
+| POST   | `/api/stores/:id/backups/:backupId/restore` | sim (Chefe) | Restaura os dados a partir de um backup |
+| POST   | `/api/admin/backup-all`                     | segredo próprio | Tira uma foto de todas as lojas (chamado por um cron externo) |
 
-Rotas marcadas "sim" exigem header `Authorization: Bearer <token>`.
+Rotas marcadas "sim" exigem header `Authorization: Bearer <token>`. As marcadas
+"sim (Chefe)" exigem além disso que o token tenha sido emitido após confirmar
+a senha de Chefe (`role: 'boss'` dentro do token).
+
+## Configurando o backup automático diário (grátis)
+
+1. Gere um segredo forte pra `BACKUP_SECRET` no `.env` (e também nas variáveis
+   de ambiente do Render) — igual você fez com o `JWT_SECRET`, mas **use um
+   valor diferente**.
+2. Crie uma conta grátis em [cron-job.org](https://cron-job.org).
+3. Crie um novo "cronjob":
+   - **URL**: `https://SUA-URL-NO-RENDER.onrender.com/api/admin/backup-all`
+   - **Método**: `POST`
+   - **Cabeçalho (header) customizado**: `x-backup-secret` com o mesmo valor
+     do `BACKUP_SECRET`
+   - **Frequência**: uma vez por dia (ex: todo dia às 3h da manhã)
+4. Salve e teste rodando manualmente uma vez — deve retornar algo como
+   `{"ok":true,"storesBackedUp":3,"oldBackupsRemoved":0}`.
+
+Os backups ficam guardados por 30 dias (configurável em
+`backend/src/routes/backups.js`, constante `RETENTION_DAYS`). Cada Chefe pode
+ver e restaurar os backups da própria loja em **Configurações → Ver backups**.

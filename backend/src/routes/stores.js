@@ -189,6 +189,38 @@ router.post('/:id/sales/:saleId/cancel', requireStoreAuth, requireBoss, async fu
   }
 });
 
+/* ── GET /api/stores/:id/backups — lista backups disponíveis dessa loja (só Chefe) ── */
+router.get('/:id/backups', requireStoreAuth, requireBoss, async function (req, res) {
+  try {
+    const result = await pool.query(
+      "SELECT id, to_char(created_at,'DD/MM/YYYY HH24:MI') as created FROM store_backups WHERE store_id = $1 ORDER BY created_at DESC LIMIT 30",
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao listar backups.' });
+  }
+});
+
+/* ── POST /api/stores/:id/backups/:backupId/restore — restaura os dados a partir de um backup (só Chefe) ── */
+router.post('/:id/backups/:backupId/restore', requireStoreAuth, requireBoss, async function (req, res) {
+  try {
+    const backupResult = await pool.query(
+      'SELECT data FROM store_backups WHERE id = $1 AND store_id = $2',
+      [req.params.backupId, req.params.id]
+    );
+    if (!backupResult.rows.length) return res.status(404).json({ error: 'Backup não encontrado.' });
+
+    const restoredData = backupResult.rows[0].data;
+    await pool.query('UPDATE stores SET data = $1 WHERE id = $2', [JSON.stringify(restoredData), req.params.id]);
+    res.json(sanitizeData(restoredData));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao restaurar backup.' });
+  }
+});
+
 /* ── POST /api/stores/:id/employees/:empId/login — valida senha do funcionário ── */
 router.post('/:id/employees/:empId/login', requireStoreAuth, async function (req, res) {
   try {

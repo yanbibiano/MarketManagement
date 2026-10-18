@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const storesRouter = require('./routes/stores');
+const backupsRouter = require('./routes/backups');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.get('/api/health', function (req, res) {
 });
 
 app.use('/api/stores', storesRouter);
+app.use('/api/admin', backupsRouter);
 
 app.use(function (req, res) {
   res.status(404).json({ error: 'Rota não encontrada.' });

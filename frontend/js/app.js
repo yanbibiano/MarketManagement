@@ -214,6 +214,40 @@ function saveBossPassword(){
     showToast('✅ Senha do Chefe atualizada.');
   }).catch(function(e){ err.textContent=e.message; });
 }
+
+function openBackupsModal(){
+  $('overlay-backups').classList.add('open');
+  $('backups-list').innerHTML='<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Carregando...</div>';
+  Api.listBackups(currentStoreId).then(function(backups){
+    if(!backups.length){
+      $('backups-list').innerHTML='<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Nenhum backup ainda. O primeiro é gerado automaticamente dentro de 24h.</div>';
+      return;
+    }
+    $('backups-list').innerHTML=backups.map(function(b){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--border)">'+
+        '<span style="font-size:13px">'+escH(b.created)+'</span>'+
+        '<button class="btn btn-ghost btn-sm" onclick="confirmRestoreBackup('+b.id+',\''+escH(b.created)+'\')">Restaurar</button>'+
+      '</div>';
+    }).join('');
+  }).catch(function(e){
+    $('backups-list').innerHTML='<div style="text-align:center;padding:16px;font-size:13px;color:var(--red)">⚠️ '+escH(e.message)+'</div>';
+  });
+}
+function confirmRestoreBackup(backupId, createdLabel){
+  if(!confirm('Restaurar o backup de '+createdLabel+'? Isso substitui TODOS os dados atuais da loja. Não pode ser desfeito.')) return;
+  Api.restoreBackup(currentStoreId, backupId).then(function(data){
+    products = data.products || [];
+    customCats = data.customCats || [];
+    saleHistory = data.saleHistory || [];
+    config = data.config || {lowStock:3};
+    employees = data.employees || [];
+    closeModal('overlay-backups');
+    refreshAll(); renderHistorico();
+    showToast('✅ Backup restaurado.');
+  }).catch(function(e){
+    showToast('⚠️ '+e.message, true);
+  });
+}
 async function doEmpLogin(){
   var pass=$('emp-pass-input').value;
   var emp=employees.find(function(e){return e.id===empLoginTargetId;});

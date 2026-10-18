@@ -8,7 +8,7 @@ var API_BASE_URL = (function () {
   // Em produção, troque a linha abaixo pela URL pública do seu backend
   // (ex: 'https://gestaoloja-api.onrender.com/api').
   var isLocal = ['localhost', '127.0.0.1', ''].indexOf(location.hostname) !== -1;
-  return isLocal ? 'http://localhost:3000/api' : 'https://marketmanagement-api.onrender.com/api';
+  return isLocal ? 'http://localhost:3000/api' : 'https://SUBSTITUA-PELA-URL-DO-SEU-BACKEND/api';
 })();
 
 var sessionToken = sessionStorage.getItem('gloja_token') || null;
@@ -66,6 +66,12 @@ var Api = {
   },
   cancelSale: function (storeId, saleId) {
     return apiFetch('/stores/' + storeId + '/sales/' + saleId + '/cancel', { method: 'POST' });
+  },
+  listBackups: function (storeId) {
+    return apiFetch('/stores/' + storeId + '/backups', { method: 'GET' });
+  },
+  restoreBackup: function (storeId, backupId) {
+    return apiFetch('/stores/' + storeId + '/backups/' + backupId + '/restore', { method: 'POST' });
   },
   getStoreData: function (id) {
     return apiFetch('/stores/' + id + '/data', { method: 'GET' });
